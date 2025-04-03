@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+}
+
+model Product {
+  id         String   @id @default(uuid()) // UUID
+  name       String
+  date       DateTime // Kiểu ngày tháng + giờ phút
+  supplierId String   // Khóa ngoại (tạm thời để kiểu String)
+  price      Int      @default(0) // Giá, kiểu nguyên không âm
+  note       String?  // Ghi chú, không bắt buộc
+}

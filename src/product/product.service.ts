@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { seedProductRecord } from '../../utils/prisma-seeders';
+import { seedProducts } from '../../utils/prisma-seeders';
 
 @Injectable()
 export class ProductService {
@@ -47,6 +47,6 @@ export class ProductService {
   }
 
   async seed(count: number) {
-    return await seedProductRecord(count);
+    // return await seedProducts(count);
   }
 }

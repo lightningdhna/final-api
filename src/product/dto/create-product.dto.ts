@@ -15,7 +15,7 @@ export class CreateProductDto {
     example: '3bc04716-1a42-4d12-983f-5b0941d8d831',
   })
   @IsOptional()
-  @IsUUID('4', { message: 'ID sản phẩm phải là UUID hợp lệ' })
+  // @IsUUID('4', { message: 'ID sản phẩm phải là UUID hợp lệ' })
   id?: string;
 
   @ApiProperty({ description: 'Tên sản phẩm', example: 'Táo' })

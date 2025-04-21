@@ -1,56 +1,46 @@
-// filepath: d:\datn\code\final\src\statistic\statistic.controller.ts
-import { Controller, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  NotFoundException,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { StatisticService } from './statistic.service';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { ParseIntPipe } from '@nestjs/common';
+import { SupplierStatisticsDto } from './dto/supplier-statistic.dto';
 
 @ApiTags('statistic')
 @Controller('statistic')
 export class StatisticController {
   constructor(private readonly statisticService: StatisticService) {}
 
-  @Get('counts')
-  @ApiOperation({ summary: 'Lấy số lượng tổng quát (orders, products, etc.)' })
-  @ApiResponse({ status: 200, description: 'Số lượng các thực thể.' })
-  getCounts() {
-    return this.statisticService.getCounts();
-  }
-
-  @Get('orders/by-status')
-  @ApiOperation({ summary: 'Lấy số lượng đơn hàng theo trạng thái' })
+  @Get('supplier/:supplierId')
+  @ApiOperation({
+    summary: 'Lấy thống kê sản phẩm của nhà cung cấp',
+    description:
+      'Thống kê bao gồm: tồn kho, đơn hàng, doanh số cho mỗi sản phẩm',
+  })
+  @ApiParam({
+    name: 'supplierId',
+    description: 'ID của nhà cung cấp (UUID)',
+    type: String,
+  })
   @ApiResponse({
     status: 200,
-    description: 'Số lượng đơn hàng theo trạng thái.',
+    description: 'Thống kê sản phẩm của nhà cung cấp.',
+    type: SupplierStatisticsDto,
   })
-  getOrdersByStatus() {
-    return this.statisticService.getOrdersByStatus();
+  @ApiResponse({ status: 404, description: 'Không tìm thấy nhà cung cấp.' })
+  async getSupplierProductStatistics(
+    @Param('supplierId', ParseUUIDPipe) supplierId: string,
+  ) {
+    const statistics =
+      await this.statisticService.getSupplierProductStatistics(supplierId);
+    if (!statistics) {
+      throw new NotFoundException(
+        `Không tìm thấy nhà cung cấp với ID ${supplierId}`,
+      );
+    }
+    return statistics;
   }
-
-  @Get('products/by-supplier')
-  @ApiOperation({ summary: 'Lấy số lượng sản phẩm theo nhà cung cấp' })
-  @ApiResponse({
-    status: 200,
-    description: 'Số lượng sản phẩm theo nhà cung cấp.',
-  })
-  getProductsBySupplier() {
-    return this.statisticService.getProductsBySupplier();
-  }
-
-  @Get('registrations/by-status')
-  @ApiOperation({ summary: 'Lấy số lượng đăng ký dropship theo trạng thái' })
-  @ApiResponse({
-    status: 200,
-    description: 'Số lượng đăng ký theo trạng thái.',
-  })
-  getRegistrationsByStatus() {
-    return this.statisticService.getRegistrationsByStatus();
-  }
-
-  // Add more statistic endpoints as needed...
-  // Example: Get warehouse capacity overview
-  // @Get('warehouses/capacity')
-  // @ApiOperation({ summary: 'Thống kê sức chứa kho' })
-  // getWarehouseCapacityStats() {
-  //   return this.statisticService.getWarehouseCapacityStats();
-  // }
 }

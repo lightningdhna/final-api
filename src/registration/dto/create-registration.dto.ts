@@ -1,28 +1,30 @@
-// filepath: d:\datn\code\final\src\registration\dto\create-registration.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsInt, Min, IsIn } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, Min, IsUUID } from 'class-validator';
 
 export class CreateRegistrationDto {
-  @ApiProperty({ description: 'ID của dropshipper (UUID)', example: '...' })
-  @IsUUID()
+  @ApiProperty({
+    description: 'ID của dropshipper',
+    example: '3bc04716-1a42-4d12-983f-5b0941d8d831',
+  })
+  @IsNotEmpty({ message: 'ID của dropshipper không được để trống' })
+  @IsUUID('4', { message: 'ID của dropshipper phải là UUID hợp lệ' })
   dropshipperId!: string;
 
-  @ApiProperty({ description: 'ID của sản phẩm (UUID)', example: '...' })
-  @IsUUID()
+  @ApiProperty({
+    description: 'ID của sản phẩm',
+    example: '3bc04716-1a42-4d12-983f-5b0941d8d831',
+  })
+  @IsNotEmpty({ message: 'ID của sản phẩm không được để trống' })
+  @IsUUID('4', { message: 'ID của sản phẩm phải là UUID hợp lệ' })
   productId!: string;
 
-  @ApiProperty({ description: 'Phí hoa hồng', example: 10.5 })
-  @IsNumber()
-  @Min(0)
-  commissionFee!: number;
-
   @ApiProperty({
-    description: 'Trạng thái (0: pending, 1: approved, 2: rejected)',
-    example: 0,
+    description: 'Phí hoa hồng',
+    example: 5.5,
+    minimum: 0,
   })
-  @IsInt()
-  @IsIn([0, 1, 2]) // Ensure status is one of the allowed values
-  status!: number;
-
-  // createdDate is set by the service
+  @IsNotEmpty({ message: 'Phí hoa hồng không được để trống' })
+  @IsNumber({}, { message: 'Phí hoa hồng phải là số' })
+  @Min(0, { message: 'Phí hoa hồng không được âm' })
+  commissionFee!: number;
 }

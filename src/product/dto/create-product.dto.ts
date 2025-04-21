@@ -1,56 +1,53 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
+  IsNotEmpty,
   IsInt,
-  IsOptional,
-  IsUUID,
-  IsDate,
   Min,
+  IsOptional,
+  IsNumber, // Thêm IsNumber
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export class CreateProductDto {
-  @ApiProperty({
-    description: 'ID của sản phẩm (UUID)',
-    example: '3bc04716-1a42-4d12-983f-5b0941d8d831',
-  })
-  @IsOptional()
-  // @IsUUID('4', { message: 'ID sản phẩm phải là UUID hợp lệ' })
-  id?: string;
+  // id: Tự động tạo bởi Prisma
+  // date: Tự động gán bởi service khi tạo
+  // supplierId: Lấy từ route parameter
 
-  @ApiProperty({ description: 'Tên sản phẩm', example: 'Táo' })
-  @IsString({
-    message:
-      'Thiếu thông tin tên sản phẩm hoặc thông tin tên sản phẩm không hợp lệ',
-  })
+  @ApiProperty({ description: 'Tên sản phẩm', example: 'Táo Xanh' })
+  @IsString({ message: 'Tên sản phẩm phải là chuỗi ký tự' })
+  @IsNotEmpty({ message: 'Tên sản phẩm không được để trống' })
   name!: string;
 
-  @ApiProperty({
-    description: 'Ngày tạo sản phẩm',
-    example: '2025-03-31T12:00:00.000Z',
-  })
-  @IsOptional()
-  @IsDate({ message: 'Ngày tạo sản phẩm phải là định dạng ngày hợp lệ' })
-  @Type(() => Date)
-  date?: string | Date;
-
-  @ApiProperty({
-    description: 'ID của nhà cung cấp (UUID)',
-    example: '314de687-5713-44df-8121-5b2634e1b07b',
-  })
-  @IsUUID('4', { message: 'ID của nhà cung cấp phải là UUID hợp lệ' })
-  supplierId!: string;
-
-  @ApiProperty({ description: 'Giá sản phẩm', example: 10000 })
+  @ApiProperty({ description: 'Giá sản phẩm', example: 12000 })
   @IsInt({ message: 'Giá sản phẩm phải là số nguyên' })
   @Min(0, { message: 'Giá sản phẩm phải lớn hơn hoặc bằng 0' })
   price!: number;
 
   @ApiPropertyOptional({
     description: 'Ghi chú về sản phẩm',
-    example: 'Sản phẩm chất lượng cao',
+    example: 'Táo nhập khẩu',
   })
   @IsOptional()
   @IsString({ message: 'Ghi chú sản phẩm phải là chuỗi ký tự' })
   note?: string;
+
+  @ApiPropertyOptional({
+    description: 'Trọng lượng sản phẩm (kg)',
+    example: 0.2,
+    default: 0,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: 'Trọng lượng phải là số' })
+  @Min(0, { message: 'Trọng lượng phải lớn hơn hoặc bằng 0' })
+  weight?: number = 0;
+
+  @ApiPropertyOptional({
+    description: 'Thể tích sản phẩm (m³)',
+    example: 0.0001,
+    default: 0,
+  })
+  @IsOptional()
+  @IsNumber({}, { message: 'Thể tích phải là số' })
+  @Min(0, { message: 'Thể tích phải lớn hơn hoặc bằng 0' })
+  volume?: number = 0;
 }

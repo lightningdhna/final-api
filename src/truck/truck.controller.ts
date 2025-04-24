@@ -16,6 +16,7 @@ import {
 import { TruckService } from './truck.service';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
+import { TruckSummaryInfoDto } from './dto/summary-info.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -92,12 +93,36 @@ export class TruckController {
 
   // --- Relationship Endpoints ---
 
-  @Get(':id/plans')
-  @ApiOperation({ summary: 'Lấy danh sách kế hoạch vận chuyển cho xe tải' })
-  @ApiParam({ name: 'id', description: 'ID của xe tải (UUID)', type: String })
-  @ApiResponse({ status: 200, description: 'Danh sách kế hoạch.' })
+  // @Get(':id/plans')
+  // @ApiOperation({ summary: 'Lấy danh sách kế hoạch vận chuyển cho xe tải' })
+  // @ApiParam({ name: 'id', description: 'ID của xe tải (UUID)', type: String })
+  // @ApiResponse({ status: 200, description: 'Danh sách kế hoạch.' })
+  // @ApiResponse({ status: 404, description: 'Không tìm thấy xe tải.' })
+  // async findPlans(@Param('id', ParseUUIDPipe) id: string) {
+  //   return this.truckService.findPlans(id);
+  // }
+
+  // --- Summary Information Endpoint ---
+  @Get(':id/summary')
+  @ApiOperation({
+    summary: 'Lấy thông tin tổng hợp về xe tải',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID của xe tải (UUID)',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Thông tin tổng hợp về xe tải.',
+    type: TruckSummaryInfoDto,
+  })
   @ApiResponse({ status: 404, description: 'Không tìm thấy xe tải.' })
-  async findPlans(@Param('id', ParseUUIDPipe) id: string) {
-    return this.truckService.findPlans(id);
+  async getSummaryInfo(@Param('id', ParseUUIDPipe) id: string) {
+    const summaryInfo = await this.truckService.getSummaryInfo(id);
+    if (summaryInfo === null) {
+      throw new NotFoundException(`Truck with ID ${id} not found`);
+    }
+    return summaryInfo;
   }
 }

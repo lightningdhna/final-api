@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
 import { Order, Plan, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -10,48 +11,17 @@ export class OrderService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    // Validate product
-    const product = await this.prisma.product.findUnique({
-      where: { id: createOrderDto.productId },
-    });
-    if (!product)
-      throw new NotFoundException(
-        `Product with ID ${createOrderDto.productId} not found`,
-      );
-
-    // Validate dropshipper if provided
-    if (createOrderDto.dropshipperId) {
-      const dropshipper = await this.prisma.dropshipper.findUnique({
-        where: { id: createOrderDto.dropshipperId },
-      });
-      if (!dropshipper)
-        throw new NotFoundException(
-          `Dropshipper with ID ${createOrderDto.dropshipperId} not found`,
-        );
-    }
-
-    return this.prisma.order.create({
+    return await this.prisma.order.create({
       data: {
         ...createOrderDto,
-        timeCreated: new Date(), // Set creation time
+        timeCreated: new Date(createOrderDto.timeCreated),
       },
     });
   }
 
-  async findAll(params: {
-    productId?: string;
-    dropshipperId?: string;
-    status?: number;
-  }): Promise<Order[]> {
-    const { productId, dropshipperId, status } = params;
-    return this.prisma.order.findMany({
-      where: {
-        productId: productId,
-        dropshipperId: dropshipperId, // Handles null if dropshipperId is undefined
-        status: status,
-      },
+  async findAll(): Promise<Order[]> {
+    return await this.prisma.order.findMany({
       include: {
-        // Optionally include related data
         product: true,
         dropshipper: true,
       },
@@ -59,31 +29,135 @@ export class OrderService {
   }
 
   async findOne(id: string): Promise<Order | null> {
-    return this.prisma.order.findUnique({
+    return await this.prisma.order.findUnique({
       where: { id },
-      include: { product: true, dropshipper: true, plans: true }, // Include relations
+      include: {
+        product: true,
+        dropshipper: true,
+        plans: true,
+      },
     });
   }
 
-  async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    const order = await this.findOne(id);
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${id} not found`);
+  async update(id: string, updateOrderDto: Partial<UpdateOrderDto>): Promise<Order> {
+    const data: any = { ...updateOrderDto };
+    if (updateOrderDto.timeCreated) {
+      data.timeCreated = new Date(updateOrderDto.timeCreated);
     }
-    // Prevent changing productId or dropshipperId easily after creation? Add validation if needed.
-    return this.prisma.order.update({
+    
+    return await this.prisma.order.update({
       where: { id },
-      data: updateOrderDto,
+      data,
+    });
+  }
+
+  async updateStatus(id: string, updateStatusDto: UpdateStatusDto): Promise<Order> {
+    return await this.prisma.order.update({
+      where: { id },
+      data: {
+        status: updateStatusDto.status,
+        ...(updateStatusDto.note && { note: updateStatusDto.note }),
+      },
     });
   }
 
   async remove(id: string): Promise<Order> {
-    // Consider implications for related Plans. Prisma might handle this via schema relations.
-    const order = await this.findOne(id);
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${id} not found`);
-    }
-    return this.prisma.order.delete({ where: { id } });
+    return await this.prisma.order.delete({
+      where: { id },
+    });
+  }
+
+  async findByStatus(status: number): Promise<Order[]> {
+    return await this.prisma.order.findMany({
+      where: { status },
+      include: {
+        product: true,
+        dropshipper: true,
+      },
+    });
+  }
+
+  async findBySupplier(supplierId: string): Promise<Order[]> {
+    return await this.prisma.order.findMany({
+      where: {
+        product: {
+          supplierId,
+        },
+      },
+      include: {
+        product: true,
+        dropshipper: true,
+      },
+    });
+  }
+
+  async findBySupplierAndStatus(supplierId: string, status: number): Promise<Order[]> {
+    return await this.prisma.order.findMany({
+      where: {
+        product: {
+          supplierId,
+        },
+        status,
+      },
+      include: {
+        product: true,
+        dropshipper: true,
+      },
+    });
+  }
+
+  async findByDropshipper(dropshipperId: string): Promise<Order[]> {
+    return await this.prisma.order.findMany({
+      where: { dropshipperId },
+      include: {
+        product: true,
+        dropshipper: true,
+      },
+    });
+  }
+
+  async findByDropshipperAndStatus(dropshipperId: string, status: number): Promise<Order[]> {
+    return await this.prisma.order.findMany({
+      where: { 
+        dropshipperId, 
+        status 
+      },
+      include: {
+        product: true,
+        dropshipper: true,
+      },
+    });
+  }
+
+  async findByProduct(productId: string): Promise<Order[]> {
+    return await this.prisma.order.findMany({
+      where: { productId },
+      include: {
+        product: true,
+        dropshipper: true,
+      },
+    });
+  }
+
+  async productExists(productId: string): Promise<boolean> {
+    const count = await this.prisma.product.count({
+      where: { id: productId },
+    });
+    return count > 0;
+  }
+
+  async dropshipperExists(dropshipperId: string): Promise<boolean> {
+    const count = await this.prisma.dropshipper.count({
+      where: { id: dropshipperId },
+    });
+    return count > 0;
+  }
+
+  async supplierExists(supplierId: string): Promise<boolean> {
+    const count = await this.prisma.supplier.count({
+      where: { id: supplierId },
+    });
+    return count > 0;
   }
 
   // --- Relationship Methods ---

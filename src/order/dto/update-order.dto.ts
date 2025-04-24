@@ -5,7 +5,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, IsNumber, Min } from 'class-validator';
 
 // Usually, you only update certain fields like status or note
-export class UpdateOrderDto {
+export class UpdateOrderDto extends PartialType(CreateOrderDto) {
   // Not extending PartialType to be more specific
 
   @ApiPropertyOptional({ description: 'Trạng thái đơn hàng', example: 1 })
